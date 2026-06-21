@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image to prompt — Tester Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e0e14;
+    --panel:#1c1c24;
+    --panel-2:#13131a;
+    --line:#2c2c38;
+    --ink:#eaeaf2;
+    --ink-soft:#9a9aaf;
+    --ink-dim:#7a7a8c;
+    --accent:#6c8cff;
+    --accent-soft:#8aa2ff;
+    --green:#27c93f;
+    --amber:#ffb83d;
+    --radius:16px;
+    --maxw:980px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  /* atmospheric background */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(60vw 50vh at 78% -8%, rgba(108,140,255,.20), transparent 60%),
+      radial-gradient(45vw 40vh at 8% 12%, rgba(108,140,255,.10), transparent 60%),
+      radial-gradient(40vw 50vh at 50% 115%, rgba(140,162,255,.10), transparent 60%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  /* ---------- HERO ---------- */
+  header{padding:78px 0 30px;text-align:center}
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:700;
+    letter-spacing:.12em;text-transform:uppercase;
+    color:var(--accent-soft);
+    border:1px solid rgba(108,140,255,.35);
+    background:rgba(108,140,255,.08);
+    padding:7px 14px;border-radius:100px;
+  }
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 rgba(108,140,255,.7);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(108,140,255,.6)}70%{box-shadow:0 0 0 8px rgba(108,140,255,0)}100%{box-shadow:0 0 0 0 rgba(108,140,255,0)}}
+
+  .logo{font-size:46px;margin:26px 0 6px;letter-spacing:-.5px}
+  h1{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+    font-size:clamp(38px,7vw,68px);line-height:1.02;letter-spacing:-.02em;
+    margin:6px 0 0;
+  }
+  h1 .grad{
+    background:linear-gradient(120deg,var(--accent) 0%,#b9c6ff 55%,#fff 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .lede{max-width:560px;margin:20px auto 0;font-size:clamp(16px,2.4vw,19px);color:var(--ink-soft)}
+  .flow{
+    display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+    margin-top:30px;font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink-dim)
+  }
+  .flow b{color:var(--ink);font-weight:700}
+  .flow .arr{color:var(--accent)}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:46px 0}
+  .eyebrow{
+    font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--accent-soft);margin-bottom:12px
+  }
+  h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;
+     font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;line-height:1.08}
+  .sub{color:var(--ink-soft);margin-top:10px;max-width:620px}
+
+  /* ---------- INSTALL ---------- */
+  .install{
+    margin-top:26px;border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0));
+    overflow:hidden;
+  }
+  .irow{display:grid;grid-template-columns:54px 1fr;gap:0;border-top:1px solid var(--line)}
+  .irow:first-child{border-top:none}
+  .inum{
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:18px;
+    color:var(--accent-soft);background:rgba(108,140,255,.06);border-right:1px solid var(--line)
+  }
+  .ibody{padding:16px 18px}
+  .ibody h3{font-size:16px;font-weight:700;margin-bottom:4px}
+  .ibody p{color:var(--ink-soft);font-size:14.5px}
+  code,.kbd{font-family:"JetBrains Mono",monospace;font-size:12.5px}
+  .kbd{background:#191921;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:#cfd2e6;white-space:nowrap}
+  .note{
+    margin-top:18px;display:flex;gap:12px;align-items:flex-start;
+    border:1px solid rgba(255,184,61,.28);background:rgba(255,184,61,.06);
+    border-radius:12px;padding:14px 16px;font-size:14px;color:#e9d6b0
+  }
+  .note b{color:#ffd98a}
+
+  /* ---------- STEP FRAMES ---------- */
+  .steps{display:flex;flex-direction:column;gap:40px;margin-top:36px}
+  .step{display:grid;grid-template-columns:1fr 360px;gap:34px;align-items:center}
+  .step:nth-child(even){grid-template-columns:360px 1fr}
+  .step:nth-child(even) .step-txt{order:2}
+  .step-num{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:15px;
+    color:var(--bg);background:var(--accent);width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;margin-bottom:14px
+  }
+  .step-txt h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:23px;letter-spacing:-.01em}
+  .step-txt p{color:var(--ink-soft);margin-top:8px;font-size:15px}
+  .step-txt .tip{margin-top:10px;font-size:13.5px;color:var(--ink-dim)}
+  .step-txt .tip b{color:var(--accent-soft)}
+
+  .frame-wrap{display:flex;justify-content:center}
+
+  /* faux browser image + context menu (step 2) */
+  .browser{
+    width:100%;max-width:360px;border-radius:14px;overflow:hidden;border:1px solid var(--line);
+    background:#0b0b10;box-shadow:0 24px 60px -24px rgba(0,0,0,.8)
+  }
+  .browser .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#171720;border-bottom:1px solid var(--line)}
+  .browser .bar i{width:10px;height:10px;border-radius:50%;display:block}
+  .browser .bar i:nth-child(1){background:#ff5f57}.browser .bar i:nth-child(2){background:#febc2e}.browser .bar i:nth-child(3){background:#28c840}
+  .browser .urlbar{flex:1;margin-left:8px;height:18px;border-radius:5px;background:#0e0e14;border:1px solid #23232e}
+  .canvas{position:relative;padding:18px;min-height:210px;display:flex;align-items:center;justify-content:center}
+  .photo{width:190px;height:138px;border-radius:10px;overflow:hidden;box-shadow:0 8px 24px -8px rgba(0,0,0,.7)}
+  .photo svg{display:block;width:100%;height:100%}
+  .ctxmenu{
+    position:absolute;top:48%;left:54%;width:198px;background:#202028;border:1px solid #34343f;
+    border-radius:10px;padding:5px;box-shadow:0 18px 40px -10px rgba(0,0,0,.85);
+    font-size:12.5px;color:#cfd0db
+  }
+  .ctxmenu .mi{padding:7px 10px;border-radius:6px;display:flex;align-items:center;gap:8px;color:#9a9aab}
+  .ctxmenu .mi.sep{border-top:1px solid #34343f;margin:4px 2px;padding:0;height:0}
+  .ctxmenu .mi.active{background:var(--accent);color:#fff;font-weight:700}
+  .ctxmenu .mi .ic{width:15px;text-align:center}
+  .cursor{position:absolute;top:62%;left:60%;font-size:17px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+
+  /* real side panel replica (steps 3-4) */
+  .panel{
+    width:300px;background:var(--panel);border:1px solid #25252f;border-radius:14px;
+    color:var(--ink);font-size:12px;overflow:hidden;
+    box-shadow:0 28px 70px -28px rgba(0,0,0,.85)
+  }
+  .panel .phead{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--line);background:#191921}
+  .panel .phead .g{font-size:14px}
+  .panel .phead .ttl{font-size:11.5px;font-weight:700;letter-spacing:.02em;color:#c7c7d6}
+  .panel .pbody{padding:14px;min-height:248px;display:flex;flex-direction:column}
+  .thumb{width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#14141a;margin-bottom:12px}
+  .thumb svg{display:block;width:100%;height:118px}
+  .thumb.dim svg{filter:grayscale(.35) brightness(.62)}
+  .spin{width:24px;height:24px;border:3px solid #34344a;border-top-color:var(--accent);border-radius:50%;margin:6px auto 12px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loadtxt{text-align:center;color:#9a9aaa;font-size:11.5px}
+  .skel{height:8px;border-radius:4px;background:#2a2a38;margin:9px 0;animation:sk 1.3s ease-in-out infinite}
+  .skel.l{width:100%}.skel.m{width:82%}.skel.s{width:52%}
+  @keyframes sk{0%,100%{opacity:.5}50%{opacity:1}}
+  .skelwrap{margin-top:16px}
+  .promptbox{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:13px 14px;
+    line-height:1.62;color:#d6d6e2;font-size:12.5px;flex:1 1 auto;overflow:hidden
+  }
+  .promptbox .hl{color:#aeb6e0}
+  .btn{text-align:center;border-radius:8px;padding:10px;font-weight:700;font-size:12px;border:none;width:100%}
+  .btn.primary{background:var(--accent);color:#fff;margin-top:12px}
+  .btn.ghost{background:transparent;border:1px solid #3a3a4a;color:#aeb0c0;margin-top:8px}
+  .ph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--ink-dim);gap:13px;padding:8px}
+  .ph .big{font-size:40px;line-height:1}
+  .ph .t{font-size:16px;color:#aeb0c0;font-weight:600}
+  .ph .s{font-size:13px;line-height:1.5;max-width:230px}
+  .ph .s b{color:#cfd2e6}
+  .tag{display:inline-block;margin-top:14px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
+
+  /* ---------- limit / states strip ---------- */
+  .states{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:24px}
+  .scard{border:1px solid var(--line);border-radius:14px;padding:18px;background:rgba(255,255,255,.02)}
+  .scard .ico{font-size:24px}
+  .scard h4{font-size:15px;font-weight:700;margin:8px 0 4px}
+  .scard p{font-size:13.5px;color:var(--ink-soft)}
+
+  /* ---------- feedback ---------- */
+  .cta{
+    margin-top:14px;border:1px solid var(--line);border-radius:20px;padding:34px 30px;text-align:center;
+    background:
+      radial-gradient(60% 120% at 50% -20%, rgba(108,140,255,.16), transparent 70%),
+      rgba(255,255,255,.02)
+  }
+  .cta h2{margin-bottom:8px}
+  .checklist{display:flex;flex-direction:column;gap:9px;max-width:480px;margin:22px auto 0;text-align:left}
+  .checklist li{list-style:none;display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:#cdd0de}
+  .checklist .x{color:var(--accent);font-weight:800;font-family:"JetBrains Mono",monospace}
+  footer{padding:50px 0 70px;text-align:center;color:var(--ink-dim);font-size:13px}
+  footer .sig{font-family:"JetBrains Mono",monospace;letter-spacing:.04em}
+
+  @media(max-width:760px){
+    .step,.step:nth-child(even){grid-template-columns:1fr}
+    .step:nth-child(even) .step-txt{order:0}
+    .frame-wrap{order:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <header>
+    <span class="badge"><span class="dot"></span>Preview build · for testers</span>
+    <div class="logo">🖼️➜📝</div>
+    <h1>Image to <span class="grad">prompt</span></h1>
+    <p class="lede">Right-click any picture on the web and get a clean, copy-ready AI prompt in your side panel. Here's everything you need to try the preview build.</p>
+    <div class="flow">
+      <b>Right-click an image</b><span class="arr">→</span><b>Get AI prompt</b><span class="arr">→</span><b>Copy the words</b>
+    </div>
+  </header>
+
+  <!-- INSTALL -->
+  <section id="install">
+    <div class="eyebrow">01 — Install the preview</div>
+    <h2>Load the build into Chrome</h2>
+    <p class="sub">It isn't on the Web Store yet, so you'll side-load it once. Takes about a minute.</p>
+
+    <div class="install">
+      <div class="irow">
+        <div class="inum">1</div>
+        <div class="ibody">
+          <h3>Unzip the build I sent you</h3>
+          <p>Drop <code>image-to-prompt.zip</code> anywhere and extract it. Keep the folder somewhere you won't delete by accident.</p>
+        </div>
+      </div>
+      <div class="irow">
+        <div class="inum">2</div>
+        <div class="ibody">
+          <h3>Open the extensions page</h3>
+          <p>Go to <span class="kbd">chrome://extensions</span> and switch on <b>Developer mode</b> (top-right toggle).</p>
+        </div>
+      </div>
+      <div class="irow">
+        <div class="inum">3</div>
+        <div class="ibody">
+          <h3>Load unpacked</h3>
+          <p>Click <span class="kbd">Load unpacked</span> and pick the unzipped <code>extension</code> folder. The card appears with the 🖼️➜📝 icon.</p>
+        </div>
+      </div>
+      <div class="irow">
+        <div class="inum">4</div>
+        <div class="ibody">
+          <h3>Pin it to the toolbar</h3>
+          <p>Click the puzzle-piece <b>🧩</b> in Chrome's toolbar, then the pin next to <b>Image to prompt</b>, so it's always one click away.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span>🔒</span>
+      <div>Your picture is sent securely to our service only when <b>you</b> ask for a prompt — there's no account, no sign-in, and no API key to set up. Works on Chrome &amp; Edge (Chromium).</div>
+    </div>
+  </section>
+
+  <!-- HOW TO USE -->
+  <section id="use">
+    <div class="eyebrow">02 — Using it, frame by frame</div>
+    <h2>From a picture to a prompt in 4 clicks</h2>
+    <p class="sub">Same four steps every time. Here's exactly what each one looks like.</p>
+
+    <div class="steps">
+
+      <!-- STEP 1 -->
+      <div class="step">
+        <div class="step-txt">
+          <div class="step-num">1</div>
+          <h3>Find any image, anywhere</h3>
+          <p>A photo, an artwork, a product shot, a screenshot — anything visible on a page works. No upload, no file picker.</p>
+          <p class="tip"><b>Tip:</b> it reads the actual picture on the page, so even images deep inside a gallery are fair game.</p>
+        </div>
+        <div class="frame-wrap">
+          <div class="browser">
+            <div class="bar"><i></i><i></i><i></i><span class="urlbar"></span></div>
+            <div class="canvas">
+              <div class="photo">
+                <svg viewBox="0 0 190 138" xmlns="http://www.w3.org/2000/svg">
+                  <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#ff9a6c"/><stop offset=".5" stop-color="#c86bff"/><stop offset="1" stop-color="#6c8cff"/>
+                  </linearGradient></defs>
+                  <rect width="190" height="138" fill="url(#g1)"/>
+                  <circle cx="140" cy="40" r="22" fill="#fff" opacity=".85"/>
+                  <path d="M0 110 L55 70 L95 100 L140 60 L190 95 L190 138 L0 138 Z" fill="#1c1c24" opacity=".55"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step">
+        <div class="step-txt">
+          <div class="step-num">2</div>
+          <h3>Right-click → “Get AI prompt”</h3>
+          <p>Open the right-click menu on the image and choose <b>Get AI prompt</b>. That's the only command the extension adds.</p>
+          <p class="tip"><b>Tip:</b> if you don't see it, make sure you right-clicked directly <b>on the image</b>, not the empty space around it.</p>
+        </div>
+        <div class="frame-wrap">
+          <div class="browser">
+            <div class="bar"><i></i><i></i><i></i><span class="urlbar"></span></div>
+            <div class="canvas">
+              <div class="photo">
+                <svg viewBox="0 0 190 138" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="190" height="138" fill="url(#g1)"/>
+                  <circle cx="140" cy="40" r="22" fill="#fff" opacity=".85"/>
+                  <path d="M0 110 L55 70 L95 100 L140 60 L190 95 L190 138 L0 138 Z" fill="#1c1c24" opacity=".55"/>
+                </svg>
+              </div>
+              <div class="ctxmenu">
+                <div class="mi"><span class="ic">🔗</span>Open image in new tab</div>
+                <div class="mi"><span class="ic">💾</span>Save image as…</div>
+                <div class="mi"><span class="ic">📋</span>Copy image</div>
+                <div class="mi sep"></div>
+                <div class="mi active"><span class="ic">🖼️</span>Get AI prompt</div>
+              </div>
+              <div class="cursor">▾</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step">
+        <div class="step-txt">
+          <div class="step-num">3</div>
+          <h3>The side panel reads it</h3>
+          <p>Chrome's side panel slides open on the right and shows your image dimmed while it works. Usually a couple of seconds.</p>
+          <p class="tip"><b>What you'll see:</b> a spinner and “Reading the image…”. Nothing to click — just wait.</p>
+        </div>
+        <div class="frame-wrap">
+          <div class="panel">
+            <div class="phead"><span class="g">🖼️➜📝</span><span class="ttl">Image to prompt</span></div>
+            <div class="pbody">
+              <div class="thumb dim">
+                <svg viewBox="0 0 280 118" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="280" height="118" fill="url(#g1)"/>
+                  <circle cx="210" cy="34" r="20" fill="#fff" opacity=".85"/>
+                  <path d="M0 95 L80 60 L140 86 L210 52 L280 82 L280 118 L0 118 Z" fill="#1c1c24" opacity=".55"/>
+                </svg>
+              </div>
+              <div class="spin"></div>
+              <div class="loadtxt">Reading the image…</div>
+              <div class="skelwrap"><div class="skel l"></div><div class="skel m"></div><div class="skel s"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step">
+        <div class="step-txt">
+          <div class="step-num">4</div>
+          <h3>Copy your prompt — or regenerate</h3>
+          <p>Out comes a structured prompt: subject, style, mood, lighting. Hit <b>📋 Copy prompt</b> and paste it into any AI image tool. Want a different take? <b>↻ Regenerate</b>.</p>
+          <p class="tip"><b>Tip:</b> the text is fully editable after you paste — tweak tone, length, or detail to taste.</p>
+        </div>
+        <div class="frame-wrap">
+          <div class="panel">
+            <div class="phead"><span class="g">🖼️➜📝</span><span class="ttl">Image to prompt</span></div>
+            <div class="pbody">
+              <div class="thumb">
+                <svg viewBox="0 0 280 118" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="280" height="118" fill="url(#g1)"/>
+                  <circle cx="210" cy="34" r="20" fill="#fff" opacity=".85"/>
+                  <path d="M0 95 L80 60 L140 86 L210 52 L280 82 L280 118 L0 118 Z" fill="#1c1c24" opacity=".55"/>
+                </svg>
+              </div>
+              <div class="promptbox"><span class="hl">A warm cinematic landscape</span> at golden hour, a soft white sun low over rolling dark hills, gradient sky melting from coral to violet to deep blue, high contrast, dreamy haze, wide-angle 24mm, photographic detail.</div>
+              <div class="btn primary">📋 Copy prompt</div>
+              <div class="btn ghost">↻ Regenerate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- STATES TO EXPECT -->
+  <section id="states">
+    <div class="eyebrow">03 — Good to know</div>
+    <h2>Two screens that aren't bugs</h2>
+    <p class="sub">If a tester hits one of these, it's expected behaviour — not a crash.</p>
+    <div class="states">
+      <div class="scard">
+        <div class="ico">⏳</div>
+        <h4>“High demand right now”</h4>
+        <p>There's a daily limit on the preview while we keep costs sane. If you hit it, prompts pause for the day — try again tomorrow.</p>
+      </div>
+      <div class="scard">
+        <div class="ico">⚠️</div>
+        <h4>“Couldn't generate”</h4>
+        <p>A hiccup reaching the service. Tap <b>↻ Try again</b>. If it keeps happening, that's exactly the kind of thing to report.</p>
+      </div>
+      <div class="scard">
+        <div class="ico">🖼️➜📝</div>
+        <h4>Empty panel</h4>
+        <p>If you open the panel before using it, you'll just see a hint to right-click an image. That's the resting state.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK -->
+  <section id="feedback">
+    <div class="cta">
+      <div class="eyebrow" style="justify-content:center">04 — Your mission</div>
+      <h2>Break it, then tell me how 🙏</h2>
+      <p class="sub" style="margin:8px auto 0">You're testing a preview, so weird stuff is gold. A quick note on any of these helps a ton:</p>
+      <ul class="checklist">
+        <li><span class="x">›</span> Did the prompt actually match the picture? Good ones and bad ones both help.</li>
+        <li><span class="x">›</span> Any image where <b>“Get AI prompt”</b> didn't appear, or the panel stayed stuck.</li>
+        <li><span class="x">›</span> How fast did it feel — instant, fine, or annoyingly slow?</li>
+        <li><span class="x">›</span> Anything confusing about the wording, the buttons, or the flow.</li>
+        <li><span class="x">›</span> Screenshots of anything broken (this page is handy for comparing).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div class="sig">image-to-prompt · preview · thanks for testing 💛</div>
+  </footer>
+
+</div>
+</body>
+</html>
